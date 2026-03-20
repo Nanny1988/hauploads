@@ -1,0 +1,136 @@
+blueprint:
+  name: Tankerkoenig Tagesbericht – 2 Tankstellen mit Namen
+  description: Sendet täglich um 19 Uhr den aktuellen Preis, Tiefst- und Höchstpreis mit Uhrzeit für 2 Tankstellen, inkl. Tankstellennamen
+  domain: automation
+
+  input:
+    price_sensor_1:
+      name: Tankstelle 1 (Super)
+      selector:
+        entity:
+          domain: sensor
+    price_name_1:
+      name: Tankstelle 1 Name
+      description: "Anzeigename für Bericht, z.B. ARAL"
+      default: "Tankstelle 1"
+      selector:
+        text:
+    price_sensor_2:
+      name: Tankstelle 2 (Super)
+      selector:
+        entity:
+          domain: sensor
+    price_name_2:
+      name: Tankstelle 2 Name
+      description: "Anzeigename für Bericht, z.B. Shell"
+      default: "Tankstelle 2"
+      selector:
+        text:
+    notify_service:
+      name: Notify Service
+      selector:
+        text:
+    report_time:
+      name: Uhrzeit für Bericht
+      default: "19:00:00"
+      selector:
+        time:
+
+mode: single
+
+trigger:
+  - platform: state
+    entity_id: !input price_sensor_1
+  - platform: state
+    entity_id: !input price_sensor_2
+  - platform: time
+    at: !input report_time
+
+action:
+  - choose:
+      # 📊 Track Tankstelle 1
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.entity_id == !input price_sensor_1 }}"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ states(!input price_sensor_1)|float < states('input_number.tank1_min')|float }}"
+                sequence:
+                  - service: input_number.set_value
+                    target:
+                      entity_id: input_number.tank1_min
+                    data:
+                      value: "{{ states(!input price_sensor_1) }}"
+                  - service: input_datetime.set_datetime
+                    target:
+                      entity_id: input_datetime.tank1_min_time
+                    data:
+                      time: "{{ now().strftime('%H:%M:%S') }}"
+              - conditions:
+                  - condition: template
+                    value_template: "{{ states(!input price_sensor_1)|float > states('input_number.tank1_max')|float }}"
+                sequence:
+                  - service: input_number.set_value
+                    target:
+                      entity_id: input_number.tank1_max
+                    data:
+                      value: "{{ states(!input price_sensor_1) }}"
+                  - service: input_datetime.set_datetime
+                    target:
+                      entity_id: input_datetime.tank1_max_time
+                    data:
+                      time: "{{ now().strftime('%H:%M:%S') }}"
+
+      # 📊 Track Tankstelle 2
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.entity_id == !input price_sensor_2 }}"
+        sequence:
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ states(!input price_sensor_2)|float < states('input_number.tank2_min')|float }}"
+                sequence:
+                  - service: input_number.set_value
+                    target:
+                      entity_id: input_number.tank2_min
+                    data:
+                      value: "{{ states(!input price_sensor_2) }}"
+                  - service: input_datetime.set_datetime
+                    target:
+                      entity_id: input_datetime.tank2_min_time
+                    data:
+                      time: "{{ now().strftime('%H:%M:%S') }}"
+              - conditions:
+                  - condition: template
+                    value_template: "{{ states(!input price_sensor_2)|float > states('input_number.tank2_max')|float }}"
+                sequence:
+                  - service: input_number.set_value
+                    target:
+                      entity_id: input_number.tank2_max
+                    data:
+                      value: "{{ states(!input price_sensor_2) }}"
+                  - service: input_datetime.set_datetime
+                    target:
+                      entity_id: input_datetime.tank2_max_time
+                    data:
+                      time: "{{ now().strftime('%H:%M:%S') }}"
+
+      # 📱 Bericht um report_time
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.platform == 'time' }}"
+        sequence:
+          - service: !input notify_service
+            data:
+              title: "⛽ Tankstellen Tagesbericht"
+              message: >
+                {{ !input price_name_1 }} – Aktuell: {{ states(!input price_sensor_1) }} €
+                Tief: {{ states('input_number.tank1_min') }} € um {{ states('input_datetime.tank1_min_time') }}
+                Hoch: {{ states('input_number.tank1_max') }} € um {{ states('input_datetime.tank1_max_time') }}
+
+                {{ !input price_name_2 }} – Aktuell: {{ states(!input price_sensor_2) }} €
+                Tief: {{ states('input_number.tank2_min') }} € um {{ states('input_datetime.tank2_min_time') }}
+                Hoch: {{ states('input_number.tank2_max') }} € um {{ states('input_datetime.tank2_max_time') }}
