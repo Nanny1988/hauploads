@@ -1,6 +1,6 @@
 blueprint:
-  name: Tankerkoenig Tagesbericht – 2 Tankstellen mit Namen
-  description: Sendet täglich um 19 Uhr den aktuellen Preis, Tiefst- und Höchstpreis mit Uhrzeit für 2 Tankstellen, inkl. Tankstellennamen
+  name: Tankerkoenig Tagesbericht – 2 Tankstellen via WhatsApp
+  description: Sendet täglich um 19 Uhr den aktuellen Preis, Tiefst- und Höchstpreis mit Uhrzeit für 2 Tankstellen direkt per WhatsApp
   domain: automation
 
   input:
@@ -11,7 +11,6 @@ blueprint:
           domain: sensor
     price_name_1:
       name: Tankstelle 1 Name
-      description: "Anzeigename für Bericht, z.B. ARAL"
       default: "Tankstelle 1"
       selector:
         text:
@@ -22,12 +21,12 @@ blueprint:
           domain: sensor
     price_name_2:
       name: Tankstelle 2 Name
-      description: "Anzeigename für Bericht, z.B. Shell"
       default: "Tankstelle 2"
       selector:
         text:
-    notify_service:
-      name: Notify Service
+    whatsapp_target:
+      name: WhatsApp Ziel
+      description: Gruppen-ID oder Telefonnummer für den Bericht
       selector:
         text:
     report_time:
@@ -48,7 +47,7 @@ trigger:
 
 action:
   - choose:
-      # 📊 Track Tankstelle 1
+      # Track Tankstelle 1
       - conditions:
           - condition: template
             value_template: "{{ trigger.entity_id == !input price_sensor_1 }}"
@@ -83,7 +82,7 @@ action:
                     data:
                       time: "{{ now().strftime('%H:%M:%S') }}"
 
-      # 📊 Track Tankstelle 2
+      # Track Tankstelle 2
       - conditions:
           - condition: template
             value_template: "{{ trigger.entity_id == !input price_sensor_2 }}"
@@ -118,15 +117,17 @@ action:
                     data:
                       time: "{{ now().strftime('%H:%M:%S') }}"
 
-      # 📱 Bericht um report_time
+      # Bericht um report_time
       - conditions:
           - condition: template
             value_template: "{{ trigger.platform == 'time' }}"
         sequence:
-          - service: !input notify_service
+          - service: whatsapp.send_message
             data:
-              title: "⛽ Tankstellen Tagesbericht"
+              target: !input whatsapp_target
               message: >
+                ⛽ Tankstellen Tagesbericht
+
                 {{ !input price_name_1 }} – Aktuell: {{ states(!input price_sensor_1) }} €
                 Tief: {{ states('input_number.tank1_min') }} € um {{ states('input_datetime.tank1_min_time') }}
                 Hoch: {{ states('input_number.tank1_max') }} € um {{ states('input_datetime.tank1_max_time') }}
