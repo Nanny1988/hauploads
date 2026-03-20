@@ -50,18 +50,20 @@ action:
       # Track Tankstelle 1
       - conditions:
           - condition: template
-            value_template: "{{ trigger.entity_id == !input price_sensor_1 }}"
+            value_template: >
+              {{ trigger.entity_id == input.price_sensor_1 }}
         sequence:
           - choose:
               - conditions:
                   - condition: template
-                    value_template: "{{ states(!input price_sensor_1)|float < states('input_number.tank1_min')|float }}"
+                    value_template: >
+                      {{ states(input.price_sensor_1)|float < states('input_number.tank1_min')|float }}
                 sequence:
                   - service: input_number.set_value
                     target:
                       entity_id: input_number.tank1_min
                     data:
-                      value: "{{ states(!input price_sensor_1) }}"
+                      value: "{{ states(input.price_sensor_1) }}"
                   - service: input_datetime.set_datetime
                     target:
                       entity_id: input_datetime.tank1_min_time
@@ -69,13 +71,14 @@ action:
                       time: "{{ now().strftime('%H:%M:%S') }}"
               - conditions:
                   - condition: template
-                    value_template: "{{ states(!input price_sensor_1)|float > states('input_number.tank1_max')|float }}"
+                    value_template: >
+                      {{ states(input.price_sensor_1)|float > states('input_number.tank1_max')|float }}
                 sequence:
                   - service: input_number.set_value
                     target:
                       entity_id: input_number.tank1_max
                     data:
-                      value: "{{ states(!input price_sensor_1) }}"
+                      value: "{{ states(input.price_sensor_1) }}"
                   - service: input_datetime.set_datetime
                     target:
                       entity_id: input_datetime.tank1_max_time
@@ -85,18 +88,20 @@ action:
       # Track Tankstelle 2
       - conditions:
           - condition: template
-            value_template: "{{ trigger.entity_id == !input price_sensor_2 }}"
+            value_template: >
+              {{ trigger.entity_id == input.price_sensor_2 }}
         sequence:
           - choose:
               - conditions:
                   - condition: template
-                    value_template: "{{ states(!input price_sensor_2)|float < states('input_number.tank2_min')|float }}"
+                    value_template: >
+                      {{ states(input.price_sensor_2)|float < states('input_number.tank2_min')|float }}
                 sequence:
                   - service: input_number.set_value
                     target:
                       entity_id: input_number.tank2_min
                     data:
-                      value: "{{ states(!input price_sensor_2) }}"
+                      value: "{{ states(input.price_sensor_2) }}"
                   - service: input_datetime.set_datetime
                     target:
                       entity_id: input_datetime.tank2_min_time
@@ -104,13 +109,14 @@ action:
                       time: "{{ now().strftime('%H:%M:%S') }}"
               - conditions:
                   - condition: template
-                    value_template: "{{ states(!input price_sensor_2)|float > states('input_number.tank2_max')|float }}"
+                    value_template: >
+                      {{ states(input.price_sensor_2)|float > states('input_number.tank2_max')|float }}
                 sequence:
                   - service: input_number.set_value
                     target:
                       entity_id: input_number.tank2_max
                     data:
-                      value: "{{ states(!input price_sensor_2) }}"
+                      value: "{{ states(input.price_sensor_2) }}"
                   - service: input_datetime.set_datetime
                     target:
                       entity_id: input_datetime.tank2_max_time
@@ -124,14 +130,14 @@ action:
         sequence:
           - service: whatsapp.send_message
             data:
-              target: !input whatsapp_target
+              target: "{{ input.whatsapp_target }}"
               message: >
                 ⛽ Tankstellen Tagesbericht
 
-                {{ !input price_name_1 }} – Aktuell: {{ states(!input price_sensor_1) }} €
+                {{ input.price_name_1 }} – Aktuell: {{ states(input.price_sensor_1) }} €
                 Tief: {{ states('input_number.tank1_min') }} € um {{ states('input_datetime.tank1_min_time') }}
                 Hoch: {{ states('input_number.tank1_max') }} € um {{ states('input_datetime.tank1_max_time') }}
 
-                {{ !input price_name_2 }} – Aktuell: {{ states(!input price_sensor_2) }} €
+                {{ input.price_name_2 }} – Aktuell: {{ states(input.price_sensor_2) }} €
                 Tief: {{ states('input_number.tank2_min') }} € um {{ states('input_datetime.tank2_min_time') }}
                 Hoch: {{ states('input_number.tank2_max') }} € um {{ states('input_datetime.tank2_max_time') }}
