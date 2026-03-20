@@ -132,13 +132,13 @@ action:
           - service: whatsapp.send_message
             data:
               target: "{{ whatsapp_target }}"
-            message: >
-              ⛽ Tankstellen Tagesbericht
+              message: >-
+                ⛽ Tankstellen Tagesbericht
 
-              {{ price_name_1 }} – Aktuell: {{ states(price_sensor_1) }} €
-              Tief: {{ states('input_number.tank1_min') }} € um {{ states('input_datetime.tank1_min_time') }}
-              Hoch: {{ states('input_number.tank1_max') }} € um {{ states('input_datetime.tank1_max_time') }}
+                {{ price_name_1 }} – Aktuell: {{ states(price_sensor_1) }} €
+                Tief: {{ states('input_number.tank1_min') }} € um {{ states('input_datetime.tank1_min_time') }}
+                Hoch: {{ states('input_number.tank1_max') }} € um {{ states('input_datetime.tank1_max_time') }}
 
-              {{ price_name_2 }} – Aktuell: {{ states(price_sensor_2) }} €
-              Tief: {{ states('input_number.tank2_min') }} € um {{ states('input_datetime.tank2_min_time') }}
-              Hoch: {{ states('input_number.tank2_max') }} € um {{ states('input_datetime.tank2_max_time') }}
+                {{ price_name_2 }} – Aktuell: {{ states(price_sensor_2) }} €
+                Tief: {{ states('input_number.tank2_min') }} € um {{ states('input_datetime.tank2_min_time') }}
+                Hoch: {{ states('input_number.tank2_max') }} € um {{ states('input_datetime.tank2_max_time') }}
