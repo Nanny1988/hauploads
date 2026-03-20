@@ -1,0 +1,150 @@
+blueprint:
+  name: Tankstellen Tagesbericht via WhatsApp
+  description: >
+    Trackt täglich Min/Max-Preise von 2 Tankstellen und sendet um 19 Uhr einen
+    Bericht per WhatsApp. Benötigt die Helfer aus tankstellen_helfer.yaml.
+  domain: automation
+
+  input:
+    price_sensor_1:
+      name: Sensor Tankstelle 1 (Super)
+      selector:
+        entity:
+          domain: sensor
+    price_name_1:
+      name: Name Tankstelle 1
+      default: "Tankstelle 1"
+      selector:
+        text: {}
+    price_sensor_2:
+      name: Sensor Tankstelle 2 (Super)
+      selector:
+        entity:
+          domain: sensor
+    price_name_2:
+      name: Name Tankstelle 2
+      default: "Tankstelle 2"
+      selector:
+        text: {}
+    whatsapp_target:
+      name: WhatsApp Ziel
+      description: "Gruppen-ID oder Telefonnummer, z.B. 120363426150323600@g.us"
+      selector:
+        text: {}
+    report_time:
+      name: Uhrzeit für Bericht
+      default: "19:00:00"
+      selector:
+        time:
+
+mode: single
+
+trigger:
+  - platform: state
+    entity_id: !input price_sensor_1
+    id: sensor1
+  - platform: state
+    entity_id: !input price_sensor_2
+    id: sensor2
+  - platform: time
+    at: !input report_time
+    id: bericht
+
+action:
+  - variables:
+      s1: !input price_sensor_1
+      s2: !input price_sensor_2
+      n1: !input price_name_1
+      n2: !input price_name_2
+      ziel: !input whatsapp_target
+
+  - choose:
+
+      # Tankstelle 1 tracken
+      - conditions:
+          - condition: trigger
+            id: sensor1
+        sequence:
+          - if:
+              - condition: template
+                value_template: "{{ states(s1) | float(0) < states('input_number.tank1_min') | float(9999) }}"
+            then:
+              - service: input_number.set_value
+                target:
+                  entity_id: input_number.tank1_min
+                data:
+                  value: "{{ states(s1) | float }}"
+              - service: input_datetime.set_datetime
+                target:
+                  entity_id: input_datetime.tank1_min_time
+                data:
+                  time: "{{ now().strftime('%H:%M:%S') }}"
+          - if:
+              - condition: template
+                value_template: "{{ states(s1) | float(0) > states('input_number.tank1_max') | float(0) }}"
+            then:
+              - service: input_number.set_value
+                target:
+                  entity_id: input_number.tank1_max
+                data:
+                  value: "{{ states(s1) | float }}"
+              - service: input_datetime.set_datetime
+                target:
+                  entity_id: input_datetime.tank1_max_time
+                data:
+                  time: "{{ now().strftime('%H:%M:%S') }}"
+
+      # Tankstelle 2 tracken
+      - conditions:
+          - condition: trigger
+            id: sensor2
+        sequence:
+          - if:
+              - condition: template
+                value_template: "{{ states(s2) | float(0) < states('input_number.tank2_min') | float(9999) }}"
+            then:
+              - service: input_number.set_value
+                target:
+                  entity_id: input_number.tank2_min
+                data:
+                  value: "{{ states(s2) | float }}"
+              - service: input_datetime.set_datetime
+                target:
+                  entity_id: input_datetime.tank2_min_time
+                data:
+                  time: "{{ now().strftime('%H:%M:%S') }}"
+          - if:
+              - condition: template
+                value_template: "{{ states(s2) | float(0) > states('input_number.tank2_max') | float(0) }}"
+            then:
+              - service: input_number.set_value
+                target:
+                  entity_id: input_number.tank2_max
+                data:
+                  value: "{{ states(s2) | float }}"
+              - service: input_datetime.set_datetime
+                target:
+                  entity_id: input_datetime.tank2_max_time
+                data:
+                  time: "{{ now().strftime('%H:%M:%S') }}"
+
+      # Tagesbericht senden
+      - conditions:
+          - condition: trigger
+            id: bericht
+        sequence:
+          - service: whatsapp.send_message
+            data:
+              target: "{{ ziel }}"
+              message: >-
+                ⛽ Tankstellen Tagesbericht
+
+                {{ n1 }}
+                Aktuell: {{ states(s1) }} €
+                Tief: {{ states('input_number.tank1_min') }} € um {{ states('input_datetime.tank1_min_time')[0:5] }}
+                Hoch: {{ states('input_number.tank1_max') }} € um {{ states('input_datetime.tank1_max_time')[0:5] }}
+
+                {{ n2 }}
+                Aktuell: {{ states(s2) }} €
+                Tief: {{ states('input_number.tank2_min') }} € um {{ states('input_datetime.tank2_min_time')[0:5] }}
+                Hoch: {{ states('input_number.tank2_max') }} € um {{ states('input_datetime.tank2_max_time')[0:5] }}
