@@ -13,7 +13,7 @@ blueprint:
       name: Tankstelle 1 Name
       default: "Tankstelle 1"
       selector:
-        text:
+        text: {}
     price_sensor_2:
       name: Tankstelle 2 (Super)
       selector:
@@ -23,17 +23,17 @@ blueprint:
       name: Tankstelle 2 Name
       default: "Tankstelle 2"
       selector:
-        text:
+        text: {}
     whatsapp_target:
       name: WhatsApp Ziel
       description: Gruppen-ID oder Telefonnummer für den Bericht
       selector:
-        text:
+        text: {}
     report_time:
       name: Uhrzeit für Bericht
       default: "19:00:00"
       selector:
-        time
+        time: {}
 
 mode: single
 
