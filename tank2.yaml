@@ -1,6 +1,6 @@
 blueprint:
   name: Tankerkoenig Tagesbericht – 2 Tankstellen via WhatsApp
-  description: Sendet täglich um 19 Uhr den aktuellen Preis, Tiefst- und Höchstpreis mit Uhrzeit für 2 Tankstellen direkt per WhatsApp
+  description: Sendet täglich den aktuellen Preis, Tiefst- und Höchstpreis mit Uhrzeit für 2 Tankstellen direkt per WhatsApp
   domain: automation
 
   input:
@@ -62,7 +62,7 @@ action:
           - choose:
               - conditions:
                   - condition: template
-                    value_template: "{{ states(price_sensor_1) | float < states('input_number.tank1_min') | float }}"
+                    value_template: "{{ states(price_sensor_1) | float(0) < states('input_number.tank1_min') | float(9999) }}"
                 sequence:
                   - service: input_number.set_value
                     target:
@@ -76,7 +76,7 @@ action:
                       time: "{{ now().strftime('%H:%M:%S') }}"
               - conditions:
                   - condition: template
-                    value_template: "{{ states(price_sensor_1) | float > states('input_number.tank1_max') | float }}"
+                    value_template: "{{ states(price_sensor_1) | float(0) > states('input_number.tank1_max') | float(0) }}"
                 sequence:
                   - service: input_number.set_value
                     target:
@@ -97,7 +97,7 @@ action:
           - choose:
               - conditions:
                   - condition: template
-                    value_template: "{{ states(price_sensor_2) | float < states('input_number.tank2_min') | float }}"
+                    value_template: "{{ states(price_sensor_2) | float(0) < states('input_number.tank2_min') | float(9999) }}"
                 sequence:
                   - service: input_number.set_value
                     target:
@@ -111,7 +111,7 @@ action:
                       time: "{{ now().strftime('%H:%M:%S') }}"
               - conditions:
                   - condition: template
-                    value_template: "{{ states(price_sensor_2) | float > states('input_number.tank2_max') | float }}"
+                    value_template: "{{ states(price_sensor_2) | float(0) > states('input_number.tank2_max') | float(0) }}"
                 sequence:
                   - service: input_number.set_value
                     target:
