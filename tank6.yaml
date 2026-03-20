@@ -16,6 +16,11 @@ blueprint:
       default: "Tankstelle 1"
       selector:
         text: {}
+    status_sensor_1:
+      name: Status Sensor Tankstelle 1
+      selector:
+        entity:
+          domain: binary_sensor
     price_sensor_2:
       name: Sensor Tankstelle 2 (Super)
       selector:
@@ -26,6 +31,11 @@ blueprint:
       default: "Tankstelle 2"
       selector:
         text: {}
+    status_sensor_2:
+      name: Status Sensor Tankstelle 2
+      selector:
+        entity:
+          domain: binary_sensor
     whatsapp_target:
       name: WhatsApp Ziel
       description: "Gruppen-ID oder Telefonnummer, z.B. 120363426150323600@g.us"
@@ -56,6 +66,8 @@ action:
       s2: !input price_sensor_2
       n1: !input price_name_1
       n2: !input price_name_2
+      st1: !input status_sensor_1
+      st2: !input status_sensor_2
       ziel: !input whatsapp_target
 
   - choose:
@@ -67,7 +79,9 @@ action:
         sequence:
           - if:
               - condition: template
-                value_template: "{{ states(s1) | float(0) < states('input_number.tank1_min') | float(9999) }}"
+                value_template: >
+                  {{ states(s1) not in ['unknown', 'unavailable']
+                     and states(s1) | float(0) < states('input_number.tank1_min') | float(9999) }}
             then:
               - service: input_number.set_value
                 target:
@@ -81,7 +95,9 @@ action:
                   time: "{{ now().strftime('%H:%M:%S') }}"
           - if:
               - condition: template
-                value_template: "{{ states(s1) | float(0) > states('input_number.tank1_max') | float(0) }}"
+                value_template: >
+                  {{ states(s1) not in ['unknown', 'unavailable']
+                     and states(s1) | float(0) > states('input_number.tank1_max') | float(0) }}
             then:
               - service: input_number.set_value
                 target:
@@ -101,7 +117,9 @@ action:
         sequence:
           - if:
               - condition: template
-                value_template: "{{ states(s2) | float(0) < states('input_number.tank2_min') | float(9999) }}"
+                value_template: >
+                  {{ states(s2) not in ['unknown', 'unavailable']
+                     and states(s2) | float(0) < states('input_number.tank2_min') | float(9999) }}
             then:
               - service: input_number.set_value
                 target:
@@ -115,7 +133,9 @@ action:
                   time: "{{ now().strftime('%H:%M:%S') }}"
           - if:
               - condition: template
-                value_template: "{{ states(s2) | float(0) > states('input_number.tank2_max') | float(0) }}"
+                value_template: >
+                  {{ states(s2) not in ['unknown', 'unavailable']
+                     and states(s2) | float(0) > states('input_number.tank2_max') | float(0) }}
             then:
               - service: input_number.set_value
                 target:
@@ -137,14 +157,16 @@ action:
             data:
               target: "{{ ziel }}"
               message: >-
-                ⛽ Tankstellen Tagesbericht
+                ⛽ *Tankstellen Tagesbericht*
 
-                {{ n1 }}
-                Aktuell: {{ states(s1) }} €
-                Tief: {{ states('input_number.tank1_min') }} € um {{ states('input_datetime.tank1_min_time')[0:5] }}
-                Hoch: {{ states('input_number.tank1_max') }} € um {{ states('input_datetime.tank1_max_time')[0:5] }}
+                *{{ n1 }}*
+                • Aktuell: {{ states(s1) }} €
+                • Tief: {{ states('input_number.tank1_min') }} € um {{ states('input_datetime.tank1_min_time')[0:5] }}
+                • Hoch: {{ states('input_number.tank1_max') }} € um {{ states('input_datetime.tank1_max_time')[0:5] }}
+                • Status: {{ '🟢 Geöffnet' if is_state(st1, 'on') else '🔴 Geschlossen' }}
 
-                {{ n2 }}
-                Aktuell: {{ states(s2) }} €
-                Tief: {{ states('input_number.tank2_min') }} € um {{ states('input_datetime.tank2_min_time')[0:5] }}
-                Hoch: {{ states('input_number.tank2_max') }} € um {{ states('input_datetime.tank2_max_time')[0:5] }}
+                *{{ n2 }}*
+                • Aktuell: {{ states(s2) }} €
+                • Tief: {{ states('input_number.tank2_min') }} € um {{ states('input_datetime.tank2_min_time')[0:5] }}
+                • Hoch: {{ states('input_number.tank2_max') }} € um {{ states('input_datetime.tank2_max_time')[0:5] }}
+                • Status: {{ '🟢 Geöffnet' if is_state(st2, 'on') else '🔴 Geschlossen' }}
