@@ -33,7 +33,7 @@ blueprint:
       name: Uhrzeit für Bericht
       default: "19:00:00"
       selector:
-        time:
+        time
 
 mode: single
 
@@ -47,17 +47,15 @@ trigger:
 
 action:
   - choose:
-      # Track Tankstelle 1
+      # Tankstelle 1 Min/Max tracken
       - conditions:
           - condition: template
-            value_template: >
-              {{ trigger.entity_id == input.price_sensor_1 }}
+            value_template: "{{ trigger.entity_id == input.price_sensor_1 }}"
         sequence:
           - choose:
               - conditions:
                   - condition: template
-                    value_template: >
-                      {{ states(input.price_sensor_1)|float < states('input_number.tank1_min')|float }}
+                    value_template: "{{ states(input.price_sensor_1)|float < states('input_number.tank1_min')|float }}"
                 sequence:
                   - service: input_number.set_value
                     target:
@@ -71,8 +69,7 @@ action:
                       time: "{{ now().strftime('%H:%M:%S') }}"
               - conditions:
                   - condition: template
-                    value_template: >
-                      {{ states(input.price_sensor_1)|float > states('input_number.tank1_max')|float }}
+                    value_template: "{{ states(input.price_sensor_1)|float > states('input_number.tank1_max')|float }}"
                 sequence:
                   - service: input_number.set_value
                     target:
@@ -85,17 +82,15 @@ action:
                     data:
                       time: "{{ now().strftime('%H:%M:%S') }}"
 
-      # Track Tankstelle 2
+      # Tankstelle 2 Min/Max tracken
       - conditions:
           - condition: template
-            value_template: >
-              {{ trigger.entity_id == input.price_sensor_2 }}
+            value_template: "{{ trigger.entity_id == input.price_sensor_2 }}"
         sequence:
           - choose:
               - conditions:
                   - condition: template
-                    value_template: >
-                      {{ states(input.price_sensor_2)|float < states('input_number.tank2_min')|float }}
+                    value_template: "{{ states(input.price_sensor_2)|float < states('input_number.tank2_min')|float }}"
                 sequence:
                   - service: input_number.set_value
                     target:
@@ -109,8 +104,7 @@ action:
                       time: "{{ now().strftime('%H:%M:%S') }}"
               - conditions:
                   - condition: template
-                    value_template: >
-                      {{ states(input.price_sensor_2)|float > states('input_number.tank2_max')|float }}
+                    value_template: "{{ states(input.price_sensor_2)|float > states('input_number.tank2_max')|float }}"
                 sequence:
                   - service: input_number.set_value
                     target:
@@ -123,7 +117,7 @@ action:
                     data:
                       time: "{{ now().strftime('%H:%M:%S') }}"
 
-      # Bericht um report_time
+      # Tagesbericht um report_time senden
       - conditions:
           - condition: template
             value_template: "{{ trigger.platform == 'time' }}"
